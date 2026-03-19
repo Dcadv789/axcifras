@@ -1,3 +1,6 @@
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+
 interface RawImportPanelProps {
   value: string
   onChange: (nextValue: string) => void
@@ -14,43 +17,52 @@ export function RawImportPanel({
   isParsing,
 }: RawImportPanelProps) {
   return (
-    <section className="glass-panel rounded-[28px] p-5">
+    <section className="rounded-[28px] border border-zinc-200 bg-white p-6">
       <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <div className="text-xs uppercase tracking-[0.22em] text-white/35">Importação</div>
-          <h2 className="mt-2 font-display text-xl font-semibold">Texto colado com cifra acima da letra</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-mist">
-            Cole no formato tradicional, reimporte quando quiser e depois refine o alinhamento arrastando
-            as cifras diretamente na partitura.
+          <div className="text-xs font-medium uppercase tracking-[0.26em] text-zinc-400">Importação</div>
+          <h2 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-zinc-950">
+            Importar de Cifras Club ou texto com cifra
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+            Cole o texto completo da cifra. O importador reconhece automaticamente: <strong>título</strong> (primeira linha ou após #), <strong>artista</strong> (segunda linha ou após ##), <strong>tom</strong> (tom: A), <strong>BPM</strong> (bpm: 74), <strong>seções</strong> ([Intro], [Refrão], [Verso]) e <strong>cifras acima da letra</strong>. Depois refine o alinhamento na visualização.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <button
+          <Button
             type="button"
             onClick={onImport}
             disabled={isParsing}
-            className="rounded-2xl bg-gold px-4 py-2.5 text-sm font-medium text-night transition hover:brightness-105 disabled:opacity-70"
+            size="lg"
+            className="rounded-2xl bg-[#c62424] text-white hover:bg-[#d92c2c]"
           >
             {isParsing ? 'Importando...' : 'Importar estrutura'}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={onResetAlignment}
-            className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm text-mist transition hover:border-white/20 hover:text-ink"
+            variant="outline"
+            size="lg"
+            className="rounded-2xl border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
           >
-            Regerar alinhamento
-          </button>
+            Regenerar alinhamento
+          </Button>
         </div>
       </div>
 
-      <textarea
+      <Textarea
         rows={12}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-[24px] border border-white/10 bg-night/70 px-4 py-4 font-mono text-sm leading-7 text-ink outline-none transition focus:border-gold/60"
+        className="min-h-[260px] rounded-[24px] border-zinc-200 bg-white px-4 py-4 font-mono text-sm leading-7 text-zinc-950"
         spellCheck={false}
-        placeholder={`G              D/F#
+        placeholder={`Me Ama
+Diante do Trono
+tom: A
+
+[Intro]
+G              D/F#
 Gra-ça surpre-en-den-te
 Em             C
 Som que acordou meu cora-ção`}

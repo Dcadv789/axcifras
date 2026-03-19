@@ -1,9 +1,5 @@
-import { parseChordSheet } from '../utils/chord-parser'
+import { normalizeSongLineLyric, parseChordSheet } from '../utils/chord-parser'
 import type { Song, SongDraft } from '../types/song'
-
-const SONGS_STORAGE_KEY = 'axpiano.songs.v1'
-
-type SongsByUser = Record<string, Song[]>
 
 function createId(prefix: string) {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -38,10 +34,12 @@ export function createDraftFromSong(song: Song): SongDraft {
     timeSignature: song.timeSignature,
     bpm: song.bpm,
     rawInput: song.rawInput,
-    lines: song.lines.map((line) => ({
-      ...line,
-      chords: line.chords.map((chord) => ({ ...chord })),
-    })),
+    lines: song.lines.map((line) =>
+      normalizeSongLineLyric({
+        ...line,
+        chords: line.chords.map((chord) => ({ ...chord })),
+      }),
+    ),
   }
 }
 
@@ -56,17 +54,50 @@ export function createSongRecord(draft: SongDraft, existing?: Song): Song {
     timeSignature: draft.timeSignature,
     bpm: draft.bpm,
     rawInput: draft.rawInput,
-    lines: draft.lines.map((line) => ({
-      ...line,
-      chords: line.chords.map((chord) => ({ ...chord })),
-    })),
+    lines: draft.lines.map((line) =>
+      normalizeSongLineLyric({
+        ...line,
+        chords: line.chords.map((chord) => ({ ...chord })),
+      }),
+    ),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   }
 }
 
-function getSeedSongs(): Song[] {
-  const seedDrafts: SongDraft[] = [
+export function getMockSongs(): Song[] {
+  const mockDrafts: SongDraft[] = [
+    {
+      title: 'Hallelujah',
+      artist: 'Leonard Cohen',
+      keySignature: 'C',
+      timeSignature: '4/4',
+      bpm: 60,
+      rawInput: `C                Am
+Now I've heard there was a secret chord
+C                   Am
+That David played and it pleased the Lord
+F                 G
+But you don't really care for music, do you
+C        F          G
+It goes like this, the fourth, the fifth
+Am               F
+The minor fall, the major lift
+G             E7            Am
+The baffled king composing Hallelujah`,
+      lines: parseChordSheet(`C                Am
+Now I've heard there was a secret chord
+C                   Am
+That David played and it pleased the Lord
+F                 G
+But you don't really care for music, do you
+C        F          G
+It goes like this, the fourth, the fifth
+Am               F
+The minor fall, the major lift
+G             E7            Am
+The baffled king composing Hallelujah`),
+    },
     {
       title: 'Luz Sobre o Teclado',
       artist: 'AxPiano Session',
@@ -117,49 +148,57 @@ Sem pres-sa pra cair
 C            E
 No tem-po do com-pas-so`),
     },
+    {
+      title: 'Horizonte em 6/8',
+      artist: 'Noite de Estúdio',
+      keySignature: 'C',
+      timeSignature: '6/8',
+      bpm: 68,
+      rawInput: `C              G/B
+So-bre o mar da ma-dru-ga-da
+Am             F
+Vai meu som se des-do-brar
+
+C/E            G
+Cada fra-se em mo-vi-men-to
+F              G
+Faz a lu-z do céu pulsar`,
+      lines: parseChordSheet(`C              G/B
+So-bre o mar da ma-dru-ga-da
+Am             F
+Vai meu som se des-do-brar
+
+C/E            G
+Cada fra-se em mo-vi-men-to
+F              G
+Faz a lu-z do céu pulsar`),
+    },
+    {
+      title: 'Ciranda, Cirandinha',
+      artist: 'Tradicional brasileira',
+      keySignature: 'C',
+      timeSignature: '3/4',
+      bpm: 92,
+      rawInput: `C              G
+Ci-ran-da ci-ran-di-nha
+G               C
+Va-mos to-dos ci-ran-dar
+
+C               F
+Va-mos dar a mei-a-vol-ta
+C        G        C
+Vol-ta e mei-a va-mos dar`,
+      lines: parseChordSheet(`C              G
+Ci-ran-da ci-ran-di-nha
+G               C
+Va-mos to-dos ci-ran-dar
+
+C               F
+Va-mos dar a mei-a-vol-ta
+C        G        C
+Vol-ta e mei-a va-mos dar`),
+    },
   ]
 
-  return seedDrafts.map((draft) => createSongRecord(draft))
-}
-
-function readStore() {
-  if (typeof window === 'undefined') {
-    return {}
-  }
-
-  const raw = window.localStorage.getItem(SONGS_STORAGE_KEY)
-
-  if (!raw) {
-    return {}
-  }
-
-  try {
-    return JSON.parse(raw) as SongsByUser
-  } catch {
-    return {}
-  }
-}
-
-function writeStore(payload: SongsByUser) {
-  window.localStorage.setItem(SONGS_STORAGE_KEY, JSON.stringify(payload))
-}
-
-export function loadSongsForUser(userId: string) {
-  const store = readStore()
-  const existing = store[userId]
-
-  if (existing && existing.length > 0) {
-    return existing
-  }
-
-  const seeded = getSeedSongs()
-  store[userId] = seeded
-  writeStore(store)
-  return seeded
-}
-
-export function saveSongsForUser(userId: string, songs: Song[]) {
-  const store = readStore()
-  store[userId] = songs
-  writeStore(store)
+  return mockDrafts.map((draft) => createSongRecord(draft))
 }

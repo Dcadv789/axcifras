@@ -1,71 +1,81 @@
+import { motion } from 'framer-motion'
+import { Gauge, PenSquare, PlaySquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import type { Song } from '../../types/song'
 
 interface SongCardProps {
   song: Song
-  onDelete: (songId: string) => void
 }
 
-export function SongCard({ song, onDelete }: SongCardProps) {
+export function SongCard({ song }: SongCardProps) {
   return (
-    <article className="glass-panel rounded-[28px] p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-xs uppercase tracking-[0.22em] text-white/35">{song.artist}</div>
-          <h3 className="mt-2 font-display text-2xl font-semibold tracking-[-0.03em]">
-            {song.title}
-          </h3>
-        </div>
-        <div className="rounded-2xl border border-gold/20 bg-gold/10 px-3 py-2 text-right text-sm text-gold">
-          <div>{song.keySignature}</div>
-          <div className="text-xs text-gold/70">{song.timeSignature}</div>
-        </div>
-      </div>
+    <motion.div layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
+      <article className="rounded-[24px] border border-zinc-200 bg-white p-4 transition hover:border-red-200 hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)]">
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="truncate text-[1.02rem] font-semibold tracking-[-0.03em] text-zinc-950">
+              {song.title}
+            </h3>
+            <p className="mt-1 text-sm text-zinc-500">{song.artist}</p>
+          </div>
 
-      <div className="mt-5 grid grid-cols-3 gap-3 text-sm text-mist">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-          <div className="text-xs uppercase tracking-[0.18em] text-white/35">BPM</div>
-          <div className="mt-2 text-lg text-ink">{song.bpm}</div>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-          <div className="text-xs uppercase tracking-[0.18em] text-white/35">Linhas</div>
-          <div className="mt-2 text-lg text-ink">{song.lines.filter((line) => line.lyric).length}</div>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-          <div className="text-xs uppercase tracking-[0.18em] text-white/35">Cifras</div>
-          <div className="mt-2 text-lg text-ink">
-            {song.lines.reduce((count, line) => count + line.chords.length, 0)}
+          <div className="rounded-full border border-red-100 bg-white px-2.5 py-1 text-sm font-medium text-[#c62424]">
+            {song.keySignature}
           </div>
         </div>
-      </div>
 
-      <div className="mt-5 flex flex-wrap gap-3">
-        <Link
-          to={`/songs/${song.id}/edit`}
-          className="rounded-2xl bg-gold px-4 py-2.5 text-sm font-medium text-night transition hover:brightness-105"
-        >
-          Editar
-        </Link>
-        <Link
-          to={`/songs/${song.id}/view`}
-          className="rounded-2xl border border-white/10 px-4 py-2.5 text-sm text-mist transition hover:border-white/20 hover:text-ink"
-        >
-          Visualizar
-        </Link>
-        <Link
-          to={`/songs/${song.id}/live`}
-          className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-2.5 text-sm text-cyan-200 transition hover:border-cyan-200/30"
-        >
-          Ao vivo
-        </Link>
-        <button
-          type="button"
-          onClick={() => onDelete(song.id)}
-          className="rounded-2xl border border-red-300/15 px-4 py-2.5 text-sm text-red-200/80 transition hover:border-red-300/30 hover:text-red-100"
-        >
-          Excluir
-        </button>
-      </div>
-    </article>
+        <div className="grid gap-2.5 sm:grid-cols-3">
+          <div className="rounded-2xl border border-zinc-200 bg-white px-3.5 py-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-zinc-400">Tom</div>
+            <div className="mt-2 text-sm font-medium text-zinc-950">{song.keySignature}</div>
+          </div>
+          <div className="rounded-2xl border border-zinc-200 bg-white px-3.5 py-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-zinc-400">Compasso</div>
+            <div className="mt-2 text-sm font-medium text-zinc-950">{song.timeSignature}</div>
+          </div>
+          <div className="rounded-2xl border border-zinc-200 bg-white px-3.5 py-3">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-zinc-400">
+              <Gauge className="size-3" />
+              BPM
+            </div>
+            <div className="mt-2 text-sm font-medium text-zinc-950">{song.bpm}</div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-zinc-200 pt-3">
+          <Link
+            to={`/songs/${song.id}/edit`}
+            className={cn(
+              buttonVariants({ variant: 'default', size: 'sm' }),
+              'rounded-xl bg-[#c62424] text-white hover:bg-[#d92c2c]',
+            )}
+          >
+            <PenSquare className="mr-2 size-3.5" />
+            Editar
+          </Link>
+          <Link
+            to={`/songs/${song.id}/view`}
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'sm' }),
+              'rounded-xl border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50',
+            )}
+          >
+            Visualizar
+          </Link>
+          <Link
+            to={`/songs/${song.id}/live`}
+            className={cn(
+              buttonVariants({ variant: 'secondary', size: 'sm' }),
+              'rounded-xl border border-red-100 bg-white text-[#c62424] hover:bg-red-50',
+            )}
+          >
+            <PlaySquare className="mr-2 size-3.5" />
+            Ao vivo
+          </Link>
+        </div>
+      </article>
+    </motion.div>
   )
 }

@@ -1,5 +1,3 @@
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 @tailwind base;
 @tailwind components;
@@ -11,14 +9,16 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --ax-bg: #090b11;
-  --ax-panel: rgba(16, 21, 32, 0.86);
-  --ax-panel-strong: rgba(14, 19, 29, 0.96);
+  --ax-bg: #090d14;
+  --ax-panel: rgba(16, 21, 32, 0.9);
+  --ax-panel-strong: rgba(13, 18, 28, 0.98);
   --ax-border: rgba(212, 219, 233, 0.12);
   --ax-muted: #9aa5b6;
   --ax-text: #f5f7fb;
-  --ax-gold: #f5c85c;
-  --ax-caret: #7ee0d0;
+  --ax-accent: #c62424;
+  --ax-accent-strong: #d92c2c;
+  --ax-accent-soft: rgba(198, 36, 36, 0.14);
+  --ax-caret: #d92c2c;
 }
 
 * {
@@ -27,8 +27,8 @@
 
 html {
   background:
-    radial-gradient(circle at top, rgba(245, 200, 92, 0.1), transparent 32%),
-    radial-gradient(circle at bottom right, rgba(126, 224, 208, 0.07), transparent 26%),
+    radial-gradient(circle at top, rgba(220, 38, 38, 0.12), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(127, 29, 29, 0.1), transparent 24%),
     var(--ax-bg);
 }
 
@@ -37,9 +37,8 @@ body {
   min-height: 100svh;
   color: var(--ax-text);
   background:
-    radial-gradient(circle at top left, rgba(245, 200, 92, 0.09), transparent 24%),
-    radial-gradient(circle at right, rgba(126, 224, 208, 0.06), transparent 28%),
-    linear-gradient(180deg, #090b11 0%, #0b1018 100%);
+    radial-gradient(circle at top, rgba(220, 38, 38, 0.12), transparent 18%),
+    linear-gradient(180deg, #090d14 0%, #0b1018 100%);
   font-family: "Segoe UI Variable Display", Aptos, "Trebuchet MS", sans-serif;
 }
 
@@ -64,7 +63,7 @@ textarea {
 }
 
 ::selection {
-  background: rgba(245, 200, 92, 0.3);
+  background: rgba(198, 36, 36, 0.35);
 }
 
 .glass-panel {
@@ -79,9 +78,46 @@ textarea {
   border: 1px solid rgba(212, 219, 233, 0.12);
 }
 
+.app-surface {
+  background:
+    linear-gradient(180deg, rgba(16, 21, 32, 0.96) 0%, rgba(13, 18, 28, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(18px);
+}
+
+.app-surface-soft {
+  background:
+    linear-gradient(180deg, rgba(22, 28, 41, 0.94) 0%, rgba(14, 18, 27, 0.97) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.app-inset {
+  background:
+    linear-gradient(180deg, rgba(18, 24, 35, 0.96) 0%, rgba(11, 15, 23, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 14px 36px rgba(0, 0, 0, 0.26);
+}
+
+.app-tile {
+  background:
+    linear-gradient(180deg, rgba(27, 34, 49, 0.82) 0%, rgba(16, 21, 31, 0.92) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 12px 30px rgba(0, 0, 0, 0.22);
+}
+
 .score-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(245, 200, 92, 0.45) transparent;
+  scrollbar-color: rgba(198, 36, 36, 0.45) transparent;
 }
 
 .score-scroll::-webkit-scrollbar {
@@ -94,7 +130,7 @@ textarea {
 }
 
 .score-scroll::-webkit-scrollbar-thumb {
-  background: rgba(245, 200, 92, 0.38);
+  background: rgba(198, 36, 36, 0.38);
   border-radius: 999px;
 }
 
@@ -140,8 +176,8 @@ textarea {
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
+    --primary: oklch(0.56 0.2 24);
+    --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.269 0 0);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
@@ -151,7 +187,7 @@ textarea {
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
+    --ring: oklch(0.56 0.2 24);
     --chart-1: oklch(0.809 0.105 251.813);
     --chart-2: oklch(0.623 0.214 259.815);
     --chart-3: oklch(0.546 0.245 262.881);
@@ -159,7 +195,7 @@ textarea {
     --chart-5: oklch(0.424 0.199 265.638);
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary: oklch(0.56 0.2 24);
     --sidebar-primary-foreground: oklch(0.985 0 0);
     --sidebar-accent: oklch(0.269 0 0);
     --sidebar-accent-foreground: oklch(0.985 0 0);
@@ -170,7 +206,8 @@ textarea {
     --font-sans: 'Geist Variable', sans-serif;
   }
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
   }
   body {
     @apply bg-background text-foreground;

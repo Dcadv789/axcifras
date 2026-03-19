@@ -1,4 +1,4 @@
-export type TimeSignature = '4/4' | '3/4' | '6/8'
+export type TimeSignature = string
 
 export interface ChordPlacement {
   id: string
@@ -7,10 +7,16 @@ export interface ChordPlacement {
   nudgePx: number
 }
 
+export type SectionType = 'verso' | 'refrão' | 'coro' | 'intro' | 'ponte' | 'outro' | 'final'
+
 export interface SongLine {
   id: string
   lyric: string
   chords: ChordPlacement[]
+  /** Quando true, esta linha e a próxima são exibidas lado a lado */
+  pairWithNext?: boolean
+  /** Tipo de seção (refrão, coro, etc.) para exibição e organização */
+  sectionType?: SectionType
 }
 
 export interface Song {
@@ -34,13 +40,4 @@ export interface SongDraft {
   bpm: number
   rawInput: string
   lines: SongLine[]
-}
-
-export interface AuthUser {
-  id: string
-  email: string
-}
-
-export interface AuthResult {
-  message: string | null
 }

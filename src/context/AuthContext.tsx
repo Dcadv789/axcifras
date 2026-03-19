@@ -1,216 +1,92 @@
 import { useEffect, useMemo, useState, type PropsWithChildren } from 'react'
-import type { AuthUser } from '../types/song'
-import { isSupabaseEnabled, supabase } from '../services/supabase'
+import type { Session } from '@supabase/supabase-js'
 import { AuthContext, type AuthContextValue } from './auth-context'
-
-const MOCK_ACCOUNTS_KEY = 'axpiano.mock.accounts.v1'
-const MOCK_SESSION_KEY = 'axpiano.mock.session.v1'
-
-interface MockAccount {
-  id: string
-  email: string
-  password: string
-}
-
-function createId(prefix: string) {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return `${prefix}-${crypto.randomUUID()}`
-  }
-
-  return `${prefix}-${Math.random().toString(36).slice(2, 10)}`
-}
-
-function readMockAccounts() {
-  const raw = window.localStorage.getItem(MOCK_ACCOUNTS_KEY)
-
-  if (!raw) {
-    return [] as MockAccount[]
-  }
-
-  try {
-    return JSON.parse(raw) as MockAccount[]
-  } catch {
-    return []
-  }
-}
-
-function writeMockAccounts(accounts: MockAccount[]) {
-  window.localStorage.setItem(MOCK_ACCOUNTS_KEY, JSON.stringify(accounts))
-}
-
-function writeMockSession(user: AuthUser | null) {
-  if (!user) {
-    window.localStorage.removeItem(MOCK_SESSION_KEY)
-    return
-  }
-
-  window.localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify(user))
-}
-
-function readMockSession() {
-  const raw = window.localStorage.getItem(MOCK_SESSION_KEY)
-
-  if (!raw) {
-    return null
-  }
-
-  try {
-    return JSON.parse(raw) as AuthUser
-  } catch {
-    return null
-  }
-}
+import { assertSupabaseConfigured, supabase } from '@/lib/supabase'
+import { setPostgrestAuthToken, setPostgrestAuthUserId } from '@/services/postgrest'
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [user, setUser] = useState<AuthUser | null>(() =>
-    isSupabaseEnabled ? null : readMockSession(),
-  )
-  const [isLoading, setIsLoading] = useState(isSupabaseEnabled)
+  const [email, setEmail] = useState<string | null>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(Boolean(supabase))
 
   useEffect(() => {
-    if (!isSupabaseEnabled || !supabase) {
+    if (!supabase) {
+      setPostgrestAuthToken(null)
+      setPostgrestAuthUserId(null)
       return
     }
 
-    let mounted = true
+    let isActive = true
 
-    void supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) {
+    const applySession = (session: Session | null) => {
+      if (!isActive) {
         return
       }
 
-      const sessionUser = data.session?.user
-      setUser(
-        sessionUser
-          ? {
-              id: sessionUser.id,
-              email: sessionUser.email ?? '',
-            }
-          : null,
-      )
-      setIsLoading(false)
+      setEmail(session?.user.email ?? null)
+      setAccessToken(session?.access_token ?? null)
+      setUserId(session?.user.id ?? null)
+      setPostgrestAuthToken(session?.access_token ?? null)
+      setPostgrestAuthUserId(session?.user.id ?? null)
+    }
+
+    void supabase.auth.getSession().then(({ data }) => {
+      applySession(data.session)
+      if (isActive) {
+        setIsLoading(false)
+      }
     })
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      const sessionUser = session?.user
-      setUser(
-        sessionUser
-          ? {
-              id: sessionUser.id,
-              email: sessionUser.email ?? '',
-            }
-          : null,
-      )
-      setIsLoading(false)
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      applySession(session)
+      if (isActive) {
+        setIsLoading(false)
+      }
     })
 
     return () => {
-      mounted = false
-      subscription.unsubscribe()
+      isActive = false
+      data.subscription.unsubscribe()
     }
   }, [])
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      user,
+      email,
+      accessToken,
+      userId,
       isLoading,
-      authMode: isSupabaseEnabled ? 'supabase' : 'demo',
-      async signIn(email, password) {
-        if (isSupabaseEnabled && supabase) {
-          const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          })
-
-          if (error) {
-            throw new Error(error.message)
-          }
-
-          return { message: null }
+      async signIn(nextEmail, password) {
+        assertSupabaseConfigured()
+        const client = supabase
+        if (!client) {
+          throw new Error('Supabase nao configurado.')
         }
-
-        const account = readMockAccounts().find(
-          (candidate) => candidate.email.toLowerCase() === email.toLowerCase(),
-        )
-
-        if (!account || account.password !== password) {
-          throw new Error('Email ou senha inválidos.')
-        }
-
-        const mockUser = {
-          id: account.id,
-          email: account.email,
-        }
-
-        writeMockSession(mockUser)
-        setUser(mockUser)
-        return { message: 'Sessão local criada em modo demonstração.' }
-      },
-      async signUp(email, password) {
-        if (isSupabaseEnabled && supabase) {
-          const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-          })
-
-          if (error) {
-            throw new Error(error.message)
-          }
-
-          if (data.session?.user) {
-            return { message: null }
-          }
-
-          return {
-            message: 'Conta criada. Se a confirmação por email estiver ativa, confirme antes de entrar.',
-          }
-        }
-
-        const accounts = readMockAccounts()
-        const alreadyExists = accounts.some(
-          (candidate) => candidate.email.toLowerCase() === email.toLowerCase(),
-        )
-
-        if (alreadyExists) {
-          throw new Error('Já existe uma conta local com este email.')
-        }
-
-        const account: MockAccount = {
-          id: createId('user'),
-          email,
+        const normalizedEmail = nextEmail.trim().toLowerCase()
+        const { error } = await client.auth.signInWithPassword({
+          email: normalizedEmail,
           password,
+        })
+
+        if (error) {
+          throw new Error(error.message)
         }
-
-        accounts.push(account)
-        writeMockAccounts(accounts)
-
-        const mockUser = {
-          id: account.id,
-          email: account.email,
-        }
-
-        writeMockSession(mockUser)
-        setUser(mockUser)
-        return { message: 'Conta local criada em modo demonstração.' }
       },
-      async signOut() {
-        if (isSupabaseEnabled && supabase) {
-          const { error } = await supabase.auth.signOut()
-
-          if (error) {
-            throw new Error(error.message)
-          }
-
+      signOut() {
+        if (!supabase) {
+          setEmail(null)
+          setAccessToken(null)
+          setUserId(null)
+          setPostgrestAuthToken(null)
+          setPostgrestAuthUserId(null)
           return
         }
 
-        writeMockSession(null)
-        setUser(null)
+        void supabase.auth.signOut()
       },
     }),
-    [isLoading, user],
+    [accessToken, email, isLoading, userId],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
